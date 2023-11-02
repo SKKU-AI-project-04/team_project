@@ -4,4 +4,5 @@
 
 |  Name  |                     GitHub ID                     |
 | :----: | :-----------------------------------------------: |
-| 김태훈 | [mistercoin818](https://github.com/mistercoin818) | 성균관대 소프트웨어학과 |
+| 김태훈 | [mistercoin818](https://github.com/mistercoin818) |
+| 문태명 | [mtm776]       (https://github.com/mtm776)        |
