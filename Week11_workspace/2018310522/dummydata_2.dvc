@@ -1,0 +1,5 @@
+outs:
+- md5: 3f6c75aa9d8a61b327c1a8488f10c71d
+  size: 7320
+  hash: md5
+  path: dummydata_2
