@@ -1,2 +1,6 @@
+[core]
+    remote = gdrive11
 ['remote "2018310522"']
     url = gdrive://1tt980VT8IIjDhJlL5eNFI-U1H_GLN3lF
+['remote "gdrive11"']
+    url = gdrive://1kp1M_LVtfPXkE6VUcPYKnefzHUmnOel2
