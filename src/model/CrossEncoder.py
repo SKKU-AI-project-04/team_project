@@ -7,12 +7,13 @@ from transformers import BertModel , AutoTokenizer, AutoModel, AutoConfig, AutoM
 from collections import defaultdict
 
 from tqdm import tqdm
-
+import os
 # from dataset.dataloader import Data_collection
 
 class CrossEncoder(nn.Module):
     def __init__(self, datasets, model_config):
         super().__init__()
+        print(">> CrossEncoder Init")
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
         self.model_config = model_config
@@ -21,7 +22,7 @@ class CrossEncoder(nn.Module):
         self.config = AutoConfig.from_pretrained( self.bert_model_name)
         self.config.num_labels = 1
 
-        self.model = AutoModel.from_pretrained( self.bert_model_name, config=self.config)
+        self.model = AutoModelForSequenceClassification.from_pretrained( self.bert_model_name, config=self.config)
         self.tokenizer = AutoTokenizer.from_pretrained(self.bert_model_name)
         
         self.activation = nn.Identity()
@@ -50,10 +51,11 @@ class CrossEncoder(nn.Module):
         print(">> Train Model Start")
         num_epoch = self.model_config['num_epoch'] 
         batch_size = self.model_config['train_batch_size']
-        
+        valid_batch_size = self.model_config['train_batch_size']
+        best_scores = 0
         for epoch in range(1, num_epoch+1):
             print(f"epoch-{epoch}")
-            
+            ######## TRAIN MODEL ###########
             ## Load train data
             train_dataloader = DataLoader(train_samples, batch_size = batch_size, shuffle=True, collate_fn = self.collate_fn)
             ## 
@@ -83,6 +85,56 @@ class CrossEncoder(nn.Module):
                 total_loss = total_loss + loss.item()
                 pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1)),
             pbar.close()
+            
+            ######## VALID MODEL ###########
+            if valid_samples is None: continue
+            
+            valid_dataloader = DataLoader(valid_samples, batch_size = 1, shuffle=False, collate_fn=lambda batch: self.collate_fn(batch, in_batch=False))
+            pbar_valid = tqdm(valid_dataloader, desc=f"Epoch {epoch} VALIDATION", dynamic_ncols=True)
+            
+            total_recall3 = 0
+            total_mrr3 = 0
+            for idx, (features, labels) in enumerate(pbar_valid):
+                with torch.no_grad():
+                    # print(features)
+                    model_predictions = self.model(**features, return_dict=True)
+                    # print("model_predictions", model_predictions)
+                    
+                    logits = self.activation_train(model_predictions.logits)
+                    logits = logits.view(-1)
+                    
+                    ## calculate loss
+                    # logits
+                    # labels
+                    # print("logit : ", logits)
+                    # print("lable : ", labels)
+                    sorted_pairs = sorted(zip(logits.tolist(), labels.tolist()), reverse=True)
+                    
+                    
+                    print("sorted_pairs:", sorted_pairs)
+                    total_mrr3 = 0
+                    total_recall3 = 0
+                    for i, (score, lable) in enumerate(sorted_pairs):
+                        ### TODO : CONSIDER MULTI HOP POSITIVE 
+                        mrr_score = 0
+                        recall_score = 0
+                        if lable == 1.0:
+                            mrr_score = 1/(i+1)
+                            total_mrr3 += mrr_score
+                            if i+1 <3:
+                                recall_score = 1
+                                total_recall3 += recall_score
+                    ## Set Tqdm info
+                    
+                    pbar_valid.set_postfix(mrr3=mrr_score, total_mrr3 = total_mrr3/(idx+1), recall3=recall_score, total_recall3 = total_recall3/(idx+1)),
+            pbar_valid.close()
+            # if best_scores < total_mrr3/(idx+1):
+            #     print(">> BEST MODEL")
+            #     torch.save(self.state_dict(), os.path.join("./checkpoints", f'{epoch}_{self.__class__.__name__}_best_model.p'))
+            
+                    
+            # break
+            
             
         
     
@@ -141,7 +193,7 @@ class CrossEncoder(nn.Module):
     
     def collate_fn(self, batch, in_batch=True):
         # batch는 DataLoader에서 반환하는 미니배치 리스트
-        
+        # print("in_batch",in_batch)
         q2posd = defaultdict(list)
         for example in batch:
             Q, D, L = example[0], example[1], example[2]

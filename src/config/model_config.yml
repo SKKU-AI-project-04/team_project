@@ -12,6 +12,7 @@ reg: 0.01
 lr: 2e-05
 num_epoch: 10
 train_batch_size: 2
+valid_batch_size: 3
 ---
 # DPR
 model_name: DPR
@@ -21,3 +22,4 @@ reg: 0.01
 lr: 2e-05
 num_epoch: 10
 train_batch_size: 2
+valid_batch_size: 3
