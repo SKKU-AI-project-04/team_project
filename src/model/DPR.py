@@ -94,6 +94,8 @@ class DPR(nn.Module):
                 total_loss = total_loss + loss.item()
                 pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1)),
             pbar.close()
+            
+            
     
     
     def valid(self):

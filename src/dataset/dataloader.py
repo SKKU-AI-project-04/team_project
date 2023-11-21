@@ -77,7 +77,7 @@ class Data_collection():
         print("> valid_qids",len(self.valid_qids))
         print("> test_qids", len(self.test_qids))
         
-        self.load_qids(num=2, valid_num = 8)
+        self.load_qids(num=2, valid_num = 50)
         
         
     def load_qids(self, num=4, valid_num = 8):
@@ -116,7 +116,7 @@ class Data_collection():
         for qid in tqdm(self.valid_qids, desc="Making valid_samples"):
             # random_negs = cid_keys - set(self.qid2cids[qid])
             # random_negs = random.sample(list(random_negs), num)
-            random_negs = random.sample(list(cid_keys), num+3)
+            random_negs = random.sample(list(cid_keys), num+valid_num)
             random_negs = list(set(random_negs) - set(self.qid2cids[qid]))
             pos = self.qid2cids[qid]
             Q = self.qid2question[qid]

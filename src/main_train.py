@@ -1,7 +1,6 @@
 # from model.BM25 import BM25
-# from model.CrossEncoder import CrossEncoder
-# from model.DPR import DPR
-import model
+from model.CrossEncoder import CrossEncoder
+from model.DPR import DPR
 from dataset.dataloader import Data_collection
 import os
 import yaml
@@ -18,8 +17,7 @@ model_config = {config['model_name']:config for config in model_config_data}
 Data = Data_collection('../data', config_data)
 
 # Model = CrossEncoder(Data,  model_config[config_data['first_model']])
-MODEL_CLASS = getattr(model, config_data['second_model'])
-Model = MODEL_CLASS(Data,  model_config[config_data['first_model']])
+Model = DPR(Data,  model_config[config_data['first_model']])
 
 
 # print(data.test_qids)
@@ -30,7 +28,7 @@ Model.train_model(Data.train_samples[:100], valid_samples = Data.valid_samples[:
 # Model.test_model(Data.test_samples[:100])
 
 ## First Ranking
-# candidate_collection_ids = Data.cid2content.keys()
-# print(Data.test_samples[1])
+candidate_collection_ids = Data.cid2content.keys()
+print(Data.test_samples[1])
 
-# sorted_candidate, _ = Model.Ranking(Data.test_samples[1], list(candidate_collection_ids)[:1000], Data, topn= 20)
+sorted_candidate, _ = Model.Ranking(Data.test_samples[1], list(candidate_collection_ids)[:1000], Data, topn= 20)
