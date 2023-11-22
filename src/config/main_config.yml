@@ -1,5 +1,5 @@
 first_model: DPR
-second_model: CrossEncoder
+second_model: DPR
 ## for making DATASET
 test_neg_num: 1
 valid_neg_num: 8
