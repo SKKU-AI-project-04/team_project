@@ -1,3 +1,7 @@
 /test.csv
 test.py
 data_tmp
+**/*.pkl
+**/*.p
+**/*.tsv
+**/__pycache__

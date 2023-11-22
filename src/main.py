@@ -18,20 +18,23 @@ model_config = {config['model_name']:config for config in model_config_data}
 Data = Data_collection('../data', config_data)
 
 # Model = CrossEncoder(Data,  model_config[config_data['first_model']])
-MODEL_CLASS = getattr(model, config_data['second_model'])
-Model = MODEL_CLASS(Data,  model_config[config_data['first_model']])
-# Model.model_load(1)
+F_MODEL_CLASS = getattr(model, config_data['first_model'])
+First_Model = F_MODEL_CLASS(Data,  model_config[config_data['first_model']])
 
+S_MODEL_CLASS = getattr(model, config_data['second_model'])
+Second_Model = S_MODEL_CLASS(Data,  model_config[config_data['second_model']])
 # print(data.test_qids)
+
+
 print(">> test len:",len(Data.test_qids))
 # print(Data.valid_samples[1])
 
-Model.train_model(Data.train_samples[:10], valid_samples = Data.valid_samples[:100])
+First_Model.train_model(Data.train_samples, valid_samples = Data.valid_samples[:1000])
 
 # Model.test_model(Data.test_samples[:100])
-
+# Model.model_load(epoch = 1)
 ## First Ranking
-# candidate_collection_ids = Data.cid2content.keys()
-# print(Data.test_samples[1])
+candidate_collection_ids = list(Data.cid2content.keys())
 
-# sorted_candidate, _ = Model.Ranking(Data.test_samples[1], list(candidate_collection_ids)[:1000], Data, topn= 20)
+sorted_candidate, _ = First_Model.Ranking(Data.test_samples[1], candidate_collection_ids, Data, topn= 1000)
+sorted_candidate, _ = First_Model.Ranking(Data.test_samples[1], candidate_collection_ids, Data, topn= 100)

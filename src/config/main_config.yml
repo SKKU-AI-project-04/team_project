@@ -1,4 +1,4 @@
-first_model: DPR
+first_model: BM25
 second_model: DPR
 ## for making DATASET
 test_neg_num: 1
