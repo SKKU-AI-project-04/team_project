@@ -20,7 +20,7 @@ Data = Data_collection('../data', config_data)
 # Model = CrossEncoder(Data,  model_config[config_data['first_model']])
 MODEL_CLASS = getattr(model, config_data['second_model'])
 Model = MODEL_CLASS(Data,  model_config[config_data['first_model']])
-
+# Model.model_load(1)
 
 # print(data.test_qids)
 print(">> test len:",len(Data.test_qids))

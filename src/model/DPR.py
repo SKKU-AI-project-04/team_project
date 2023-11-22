@@ -8,6 +8,8 @@ from collections import defaultdict
 
 from tqdm import tqdm
 
+import os
+
 # from dataset.dataloader import Dataset
 
 
@@ -15,6 +17,7 @@ from tqdm import tqdm
 class DPR(nn.Module):
     def __init__(self, datasets, model_config):
         super().__init__()
+        self.trained_epoch = 0
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
         self.model_config = model_config
@@ -54,9 +57,14 @@ class DPR(nn.Module):
         print("model_config:")
         num_epoch = self.model_config['num_epoch'] 
         batch_size = self.model_config['train_batch_size']
+        valid_batch_size = self.model_config['train_batch_size']
+        best_scores = 0
         
         for epoch in range(1, num_epoch+1):
-            print(f"epoch-{epoch}")
+            print(f"epoch-{epoch+self.trained_epoch}")
+            ################################
+            ######## TRAIN MODEL ###########
+            ################################
             
             ## Load train data
             train_dataloader = DataLoader(train_samples, batch_size = batch_size, shuffle=True, collate_fn = self.collate_fn)
@@ -64,7 +72,7 @@ class DPR(nn.Module):
             self.to(self.device)
             
             total_loss = 0
-            pbar = tqdm(train_dataloader, desc=f"Epoch {epoch} Iteration", dynamic_ncols=True)
+            pbar = tqdm(train_dataloader, desc=f"Epoch {epoch+self.trained_epoch} Iteration", dynamic_ncols=True)
             for idx, (Q_features, C_features, labels) in enumerate(pbar):
                 # print(features, '\n',labels)
                 ## output = model predict
@@ -95,13 +103,68 @@ class DPR(nn.Module):
                 pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1)),
             pbar.close()
             
+            ################################
+            ######## VALID MODEL ###########
+            ################################
+            
+            if valid_samples is None: continue
+            
+            valid_dataloader = DataLoader(valid_samples, batch_size = 1, shuffle=False, collate_fn=lambda batch: self.collate_fn(batch, in_batch=False))
+            pbar_valid = tqdm(valid_dataloader, desc=f"Epoch {epoch+self.trained_epoch} VALIDATION", dynamic_ncols=True)
+            
+            total_recall3 = 0
+            total_mrr3 = 0
+            for idx, (Q_features, C_features, labels) in enumerate(pbar):
+                with torch.no_grad():
+                    # print(features, '\n',labels)
+                    ## output = model predict
+                    Q_model_ouput = self.model(**Q_features, return_dict=True).pooler_output
+                    C_model_ouput = self.model(**C_features, return_dict=True).pooler_output
+                    # print("Q_model_ouput:", Q_model_ouput.shape)
+                    
+                    # print("model_predictions", model_predictions)
+                    
+                    logits = self.activation_train(torch.sum(Q_model_ouput * C_model_ouput, dim=1))
+                    
+                    logits = logits.view(-1)
+                    
+                    ## calculate loss
+                    # logits
+                    # labels
+                    # print("logit : ", logits)
+                    # print("lable : ", labels)
+                    sorted_pairs = sorted(zip(logits.tolist(), labels.tolist()), reverse=True)
+                    
+                    
+                    print("sorted_pairs:", sorted_pairs)
+                    
+                    mrr_score = 0
+                    recall_score = 0
+                    for i, (score, lable) in enumerate(sorted_pairs):
+                        ### TODO : CONSIDER MULTI HOP POSITIVE 
+                        if lable == 1.0:
+                            print("label==1.0:", i)
+                            mrr_score = 1/(i+1)
+                            total_mrr3 += mrr_score
+                            if i+1 <3:
+                                recall_score = 1
+                                total_recall3 += recall_score
+                    ## Set Tqdm info
+                    pbar_valid.set_postfix(mrr3=mrr_score, total_mrr3 = total_mrr3/(idx+1), recall3=recall_score, total_recall3 = total_recall3/(idx+1))
+                    
+                        
+            pbar_valid.close()
+            
+            if best_scores < total_mrr3/(idx+1):
+                print(">> BEST MODEL")
+                self.model_save(epoch + self.trained_epoch)
             
     
     
-    def valid(self):
+    def valid_model(self):
         pass
     
-    def test(self):
+    def test_model(self):
         pass
     
     def Ranking(self, q_id, candidate_collection_ids, Data_class, topn= -1):
@@ -191,6 +254,8 @@ class DPR(nn.Module):
         encoded_Q_input = encoded_Q_input.to(self.device)
         encoded_C_input = encoded_C_input.to(self.device)
         batch_labels = batch_labels.to(self.device)
+        print(batch)
+        print("collate_fn label:", batch_labels)
         return encoded_Q_input, encoded_C_input, batch_labels
     
     
@@ -203,3 +268,31 @@ class DPR(nn.Module):
         encoded_input = encoded_input.to(self.device)
         
         return encoded_input
+    
+    
+    
+    
+    
+    
+        
+        
+        
+        
+        
+        
+    def model_save(self, epoch):
+        print("model save")
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        checkpoint_path = os.path.join(dir_path,"checkpoints", f'{epoch}_{self.__class__.__name__}_best_model.p')
+        self.to('cuda')
+        torch.save(self.state_dict(), checkpoint_path)
+        self.to(self.device)
+        
+    def model_load(self, epoch):
+        print("model load")
+        self.trained_epoch = epoch
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        checkpoint_path = os.path.join(dir_path,"checkpoints", f'{epoch}_{self.__class__.__name__}_best_model.p')
+        self.load_state_dict(torch.load(checkpoint_path, map_location='cpu'))
+        self.to(self.device)
+    
