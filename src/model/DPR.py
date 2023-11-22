@@ -114,7 +114,7 @@ class DPR(nn.Module):
             
             total_recall3 = 0
             total_mrr3 = 0
-            for idx, (Q_features, C_features, labels) in enumerate(pbar):
+            for idx, (Q_features, C_features, labels) in enumerate(pbar_valid):
                 with torch.no_grad():
                     # print(features, '\n',labels)
                     ## output = model predict
@@ -212,7 +212,7 @@ class DPR(nn.Module):
     
     def collate_fn(self, batch, in_batch=True):
         # batch는 DataLoader에서 반환하는 미니배치 리스트
-        
+        # print("collate_fn:", in_batch)
         q2posd = defaultdict(list)
         for example in batch:
             Q, D, L = example[0], example[1], example[2]
@@ -254,8 +254,8 @@ class DPR(nn.Module):
         encoded_Q_input = encoded_Q_input.to(self.device)
         encoded_C_input = encoded_C_input.to(self.device)
         batch_labels = batch_labels.to(self.device)
-        print(batch)
-        print("collate_fn label:", batch_labels)
+        # print(batch)
+        # print("collate_fn label:", batch_labels)
         return encoded_Q_input, encoded_C_input, batch_labels
     
     

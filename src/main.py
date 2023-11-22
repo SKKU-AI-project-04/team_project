@@ -24,8 +24,9 @@ Model = MODEL_CLASS(Data,  model_config[config_data['first_model']])
 
 # print(data.test_qids)
 print(">> test len:",len(Data.test_qids))
+# print(Data.valid_samples[1])
 
-Model.train_model(Data.train_samples[:100], valid_samples = Data.valid_samples[:100])
+Model.train_model(Data.train_samples[:10], valid_samples = Data.valid_samples[:100])
 
 # Model.test_model(Data.test_samples[:100])
 

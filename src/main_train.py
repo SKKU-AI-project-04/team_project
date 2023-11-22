@@ -22,13 +22,13 @@ Model = DPR(Data,  model_config[config_data['first_model']])
 
 # print(data.test_qids)
 print(">> test len:",len(Data.test_qids))
-
+# print(Data.valid_samples[1])
 Model.train_model(Data.train_samples[:100], valid_samples = Data.valid_samples[:100])
 
 # Model.test_model(Data.test_samples[:100])
 
 ## First Ranking
-candidate_collection_ids = Data.cid2content.keys()
-print(Data.test_samples[1])
+# candidate_collection_ids = Data.cid2content.keys()
+# print(Data.test_samples[1])
 
-sorted_candidate, _ = Model.Ranking(Data.test_samples[1], list(candidate_collection_ids)[:1000], Data, topn= 20)
+# sorted_candidate, _ = Model.Ranking(Data.test_samples[1], list(candidate_collection_ids)[:1000], Data, topn= 20)
