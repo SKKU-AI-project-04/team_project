@@ -118,14 +118,14 @@ class CrossEncoder(nn.Module):
                     sorted_pairs = sorted(zip(logits.tolist(), labels.tolist()), reverse=True)
                     
                     
-                    print("sorted_pairs:", sorted_pairs)
+                    # print("sorted_pairs:", sorted_pairs)
                     
                     mrr_score = 0
                     recall_score = 0
                     for i, (score, lable) in enumerate(sorted_pairs):
                         ### TODO : CONSIDER MULTI HOP POSITIVE 
                         if lable == 1.0:
-                            print("label==1.0:", i)
+                            # print("label==1.0:", i)
                             mrr_score = 1/(i+1)
                             total_mrr3 += mrr_score
                             if i+1 <3:
