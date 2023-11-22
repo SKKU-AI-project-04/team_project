@@ -1,0 +1,25 @@
+# BM25
+model_name: BM25
+bert_model_name: monologg/kobigbird-bert-base
+age: 30
+
+---
+# CrossEncoder
+model_name: CrossEncoder
+bert_model_name: monologg/kobigbird-bert-base
+max_grad_norm: 1
+reg: 0.01
+lr: 2e-05
+num_epoch: 10
+train_batch_size: 2
+valid_batch_size: 3
+---
+# DPR
+model_name: DPR
+bert_model_name: monologg/kobigbird-bert-base
+max_grad_norm: 1
+reg: 0.01
+lr: 2e-05
+num_epoch: 10
+train_batch_size: 2
+valid_batch_size: 3

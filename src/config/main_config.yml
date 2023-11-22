@@ -1,0 +1,15 @@
+first_model: DPR
+second_model: CrossEncoder
+## for making DATASET
+test_neg_num: 1
+valid_neg_num: 8
+
+# train
+in-batch-neg: True
+# total_docs_per_query: 2 
+train_batch_size: 3
+valid_batch_size: 3
+
+
+# Test (Ranking)
+test_batch_size: 3
