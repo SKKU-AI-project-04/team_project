@@ -1,0 +1,13 @@
+[Data Class init]
+> train_qids 19974
+> valid_qids 2498
+> test_qids 2496
+>> CrossEncoder Init
+>> test len: 2496
+model load
+ranking time: 147.82907819747925
+recall@1	0.0
+recall@5	0.8
+recall@10	0.9
+recall@20	1.0
+recall@100	1.0

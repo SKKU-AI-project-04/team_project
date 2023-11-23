@@ -29,7 +29,7 @@ Model = S_MODEL_CLASS(Data,  model_config[config_data['second_model']])
 print(">> test len:",len(Data.test_qids))
 # print(Data.valid_samples[1])
 
-Model.train_model(Data.train_samples[:10], valid_samples = Data.valid_samples[:1000])
+Model.train_model(Data.train_samples, valid_samples = Data.valid_samples[:1000])
 
 # Model.test_model(Data.test_samples[:100])
 # Model.model_load(epoch = 1)

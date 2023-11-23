@@ -77,7 +77,7 @@ class Data_collection():
         print("> valid_qids",len(self.valid_qids))
         print("> test_qids", len(self.test_qids))
         
-        self.load_qids(num=2, valid_num = 50)
+        self.load_qids(self.num, valid_num = 50)
         
         
     def load_qids(self, num=4, valid_num = 8):

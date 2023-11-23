@@ -183,6 +183,7 @@ class DPR(nn.Module):
         sorted_lists = sorted(zip(scores, candidate_collection_ids), key=lambda x: x[0], reverse=True)
         # 정렬된 결과를 다시 풀어냄        
         sorted_score, sorted_candidate = zip(*sorted_lists)
+        # print("sorted_score[:100]", len(sorted_score[:100]), sorted_score[:100])
 
         # print(sorted_score[:10])  # [4, 3, 2, 1]
         # print(sorted_candidate[:10])
@@ -200,11 +201,12 @@ class DPR(nn.Module):
         
         pbar = tqdm(train_dataloader, desc=f"Ranking ... ", dynamic_ncols=True)
         with torch.no_grad():
-            for idx, features in enumerate(pbar):
-                model_predictions = self.model(**features, return_dict=True)
+            for idx, (Q_features, C_features) in enumerate(pbar):
+                Q_model_ouput = self.model(**Q_features, return_dict=True).pooler_output
+                C_model_ouput = self.model(**C_features, return_dict=True).pooler_output
                 # print("model_predictions", model_predictions)
-                
-                scores = self.activation(model_predictions.logits)
+                s = self.activation_train(torch.sum(Q_model_ouput * C_model_ouput, dim=1)).tolist()
+                scores.extend(s)
                 
         return scores
     
@@ -262,12 +264,16 @@ class DPR(nn.Module):
     
     def ranking_collate_fn(self, batch):
         # batch는 DataLoader에서 반환하는 미니배치 리스트
+        # print("batch",batch)
+        batch_question = [t[0] for t in batch]
+        batch_collection = [t[1] for t in batch]
+        encoded_Q_input = self.tokenizer(batch_question, padding=True, truncation='longest_first', return_tensors="pt", max_length=512)
+        encoded_C_input = self.tokenizer(batch_collection, padding=True, truncation='longest_first', return_tensors="pt", max_length=512)
         
-        encoded_input = self.tokenizer(batch, padding=True, truncation='longest_first', return_tensors="pt", max_length=512)
+        encoded_Q_input = encoded_Q_input.to(self.device)
+        encoded_C_input = encoded_C_input.to(self.device)
         
-        encoded_input = encoded_input.to(self.device)
-        
-        return encoded_input
+        return encoded_Q_input, encoded_C_input
     
     
     

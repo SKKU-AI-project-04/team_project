@@ -7,7 +7,7 @@ import os
 import yaml
 import time
 from tqdm import tqdm
-with open('config/main_config_CrossEncoder.yml') as config_file:
+with open('config/main_config_DPR.yml') as config_file:
     config_data =list(yaml.safe_load_all(config_file))[0]
 with open('config/model_config.yml') as config_file:
     model_config_data = list(yaml.safe_load_all(config_file))
@@ -39,14 +39,13 @@ candidate_collection_ids = list(Data.cid2content.keys())
 
 recall_list = [0,0,0,0,0]
 recall_num = [1,5,10,20,100]
-test_num = 10
+test_num = 100
 start = time.time()
-# pbar=
 for idx in tqdm(range(0,test_num), desc = 'RANKING'):
     q_label = Data.test_samples[idx][1]
     
     sorted_candidate, _ = First_Model.Ranking(Data.test_samples[idx], candidate_collection_ids, Data, topn= 1000)
-    sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], sorted_candidate, Data, topn= 100)
+    # sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], sorted_candidate, Data, topn= 100)
     # sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], candidate_collection_ids, Data, topn= 100)
     # print("sorted_cadidate,",sorted_candidate)
     # print("q_label,",q_label)
