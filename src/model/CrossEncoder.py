@@ -7,6 +7,7 @@ from transformers import BertModel , AutoTokenizer, AutoModel, AutoConfig, AutoM
 from collections import defaultdict
 
 from tqdm import tqdm
+from utils.tool import get_scheduler
 import os
 # from dataset.dataloader import Data_collection
 
@@ -16,7 +17,7 @@ class CrossEncoder(nn.Module):
         print(">> CrossEncoder Init")
         self.trained_epoch = 0
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        
+        self.Data = datasets
         self.model_config = model_config
         self.bert_model_name = model_config['bert_model_name']
         
@@ -55,14 +56,20 @@ class CrossEncoder(nn.Module):
         num_epoch = self.model_config['num_epoch'] 
         batch_size = self.model_config['train_batch_size']
         valid_batch_size = self.model_config['train_batch_size']
+        
+        # warmup_steps = len(train_samples)
+        # num_train_steps = int(len(train_dataloader) * num_epoch)
+        # self.scheduler = get_scheduler(self.optimizer, scheduler=self.scheduler_type, warmup_steps=warmup_steps, t_total=num_train_steps)
+        
         best_scores = 0
         for epoch in range(1, num_epoch+1):
+            train_samples, _, _ = self.Data.load_qids(self.Data.num, valid_num = 50)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########
             ################################
             ## Load train data
-            train_dataloader = DataLoader(train_samples, batch_size = batch_size, shuffle=True, collate_fn = self.collate_fn)
+            train_dataloader = DataLoader(train_samples, batch_size = batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=False))
             ## 
             self.to(self.device)
             
@@ -85,10 +92,11 @@ class CrossEncoder(nn.Module):
                 
                 self.optimizer.step()
                 
-                
                 ## Set Tqdm info
                 total_loss = total_loss + loss.item()
-                pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1)),
+                pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1))
+                
+                self.optimizer.zero_grad()
             pbar.close()
             
             ################################
@@ -171,7 +179,7 @@ class CrossEncoder(nn.Module):
         sorted_lists = sorted(zip(scores, candidate_collection_ids), key=lambda x: x[0], reverse=True)
         # 정렬된 결과를 다시 풀어냄        
         sorted_score, sorted_candidate = zip(*sorted_lists)
-
+        # print(sorted_score[:100])
         # print(sorted_score[:10])  # [4, 3, 2, 1]
         # print(sorted_candidate[:10])
         
@@ -191,9 +199,10 @@ class CrossEncoder(nn.Module):
             for idx, features in enumerate(pbar):
                 model_predictions = self.model(**features, return_dict=True)
                 # print("model_predictions", model_predictions)
-                
-                scores = self.activation(model_predictions.logits)
-                
+                # self.activation(model_predictions.logits)
+                s = self.activation(model_predictions.logits).tolist()
+                scores.extend(s)
+                # print(type(scores), scores)
         return scores
     
     

@@ -1,0 +1,37 @@
+[Data Class init]
+> train_qids 19974
+> valid_qids 2498
+> test_qids 2496
+>> CrossEncoder Init
+>> test len: 2496
+>> Train Model Start
+epoch-1
+>> BEST MODEL
+model save
+epoch-2
+>> BEST MODEL
+model save
+epoch-3
+>> BEST MODEL
+model save
+epoch-4
+>> BEST MODEL
+model save
+epoch-5
+>> BEST MODEL
+model save
+epoch-6
+>> BEST MODEL
+model save
+epoch-7
+>> BEST MODEL
+model save
+epoch-8
+>> BEST MODEL
+model save
+epoch-9
+>> BEST MODEL
+model save
+epoch-10
+>> BEST MODEL
+model save

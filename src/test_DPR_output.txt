@@ -1,0 +1,12 @@
+[Data Class init]
+> train_qids 19974
+> valid_qids 2498
+> test_qids 2496
+>> test len: 2496
+model load
+ranking time: 355.4221222400665
+recall@1	0.4
+recall@5	0.6
+recall@10	0.6
+recall@20	0.8
+recall@100	0.9

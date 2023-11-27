@@ -1,0 +1,78 @@
+[Data Class init]
+> train_qids 19974
+> valid_qids 2498
+> test_qids 2496
+>> CrossEncoder Init
+>> test len: 2496
+EPOCH 1-MODEL
+model load
+ranking time: 146.90943932533264
+recall@1	0.7
+recall@5	0.9
+recall@10	1.0
+recall@20	1.0
+recall@100	1.0
+EPOCH 2-MODEL
+model load
+ranking time: 149.1456868648529
+recall@1	0.2
+recall@5	0.5
+recall@10	0.8
+recall@20	0.9
+recall@100	1.0
+EPOCH 3-MODEL
+model load
+ranking time: 149.11737775802612
+recall@1	0.4
+recall@5	0.9
+recall@10	0.9
+recall@20	1.0
+recall@100	1.0
+EPOCH 4-MODEL
+model load
+ranking time: 149.33202934265137
+recall@1	0.5
+recall@5	0.9
+recall@10	0.9
+recall@20	0.9
+recall@100	1.0
+EPOCH 5-MODEL
+model load
+ranking time: 149.06529641151428
+recall@1	0.0
+recall@5	0.0
+recall@10	0.1
+recall@20	0.1
+recall@100	0.6
+EPOCH 6-MODEL
+model load
+ranking time: 148.71038508415222
+recall@1	0.4
+recall@5	0.6
+recall@10	0.7
+recall@20	0.7
+recall@100	0.9
+EPOCH 7-MODEL
+model load
+ranking time: 148.77021074295044
+recall@1	0.0
+recall@5	0.0
+recall@10	0.1
+recall@20	0.4
+recall@100	0.9
+EPOCH 9-MODEL
+model load
+ranking time: 148.94861006736755
+recall@1	0.0
+recall@5	0.4
+recall@10	0.6
+recall@20	1.0
+recall@100	1.0
+EPOCH 10-MODEL
+model load
+ranking time: 148.09775161743164
+recall@1	0.0
+recall@5	0.0
+recall@10	0.0
+recall@20	0.0
+recall@100	0.0
