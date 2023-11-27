@@ -33,28 +33,35 @@ print(">> test len:",len(Data.test_qids))
 # First_Model.train_model(Data.train_samples, valid_samples = Data.valid_samples[:1000])
 
 # Model.test_model(Data.test_samples[:100])
-Second_Model.model_load(epoch = 10)
 ## First Ranking
 candidate_collection_ids = list(Data.cid2content.keys())
 
-recall_list = [0,0,0,0,0]
-recall_num = [1,5,10,20,100]
-test_num = 10
-start = time.time()
-# pbar=
-for idx in tqdm(range(0,test_num), desc = 'RANKING'):
-    q_label = Data.test_samples[idx][1]
+
+
+for e in [1,2,3,4,5,6,7,9, 10]:
+    print(f"EPOCH {e}-MODEL")
     
-    sorted_candidate, _ = First_Model.Ranking(Data.test_samples[idx], candidate_collection_ids, Data, topn= 1000)
-    sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], sorted_candidate, Data, topn= 100)
-    # sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], candidate_collection_ids, Data, topn= 100)
-    # print("sorted_cadidate,",sorted_candidate)
-    # print("q_label,",q_label)
+    recall_list = [0,0,0,0,0]
+    recall_num = [1,5,10,20,100]
+    test_num = 10
     
-    for n in range(len(recall_num)):
-        if q_label[0] in list(sorted_candidate)[:recall_num[n]]:
-            recall_list[n] +=1
-print(f"ranking time: {time.time()-start}")
-for n in range(len(recall_num)):    
-    print(f"recall@{recall_num[n]}\t{recall_list[n]/test_num}")
+    Second_Model.model_load(epoch = e)
+
+    start = time.time()
+    # pbar=
+    for idx in tqdm(range(0,test_num), desc = 'RANKING'):
+        q_label = Data.test_samples[idx][1]
+        
+        sorted_candidate, _ = First_Model.Ranking(Data.test_samples[idx], candidate_collection_ids, Data, topn= 1000)
+        sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], sorted_candidate, Data, topn= 100)
+        # sorted_candidate, _ = Second_Model.Ranking(Data.test_samples[idx], candidate_collection_ids, Data, topn= 100)
+        # print("sorted_cadidate,",sorted_candidate)
+        # print("q_label,",q_label)
+        
+        for n in range(len(recall_num)):
+            if q_label[0] in list(sorted_candidate)[:recall_num[n]]:
+                recall_list[n] +=1
+    print(f"ranking time: {time.time()-start}")
+    for n in range(len(recall_num)):    
+        print(f"recall@{recall_num[n]}\t{recall_list[n]/test_num}")
 # sorted_candidate, _ = First_Model.Ranking(Data.test_samples[1], candidate_collection_ids, Data, topn= 100)

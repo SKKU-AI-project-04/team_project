@@ -7,6 +7,7 @@ from transformers import BertModel , AutoTokenizer, AutoModel, AutoConfig, AutoM
 from collections import defaultdict
 
 from tqdm import tqdm
+from utils.tool import get_scheduler
 import os
 # from dataset.dataloader import Data_collection
 
@@ -55,6 +56,11 @@ class CrossEncoder(nn.Module):
         num_epoch = self.model_config['num_epoch'] 
         batch_size = self.model_config['train_batch_size']
         valid_batch_size = self.model_config['train_batch_size']
+        
+        # warmup_steps = len(train_samples)
+        # num_train_steps = int(len(train_dataloader) * num_epoch)
+        # self.scheduler = get_scheduler(self.optimizer, scheduler=self.scheduler_type, warmup_steps=warmup_steps, t_total=num_train_steps)
+        
         best_scores = 0
         for epoch in range(1, num_epoch+1):
             train_samples, _, _ = self.Data.load_qids(self.Data.num, valid_num = 50)
@@ -86,10 +92,11 @@ class CrossEncoder(nn.Module):
                 
                 self.optimizer.step()
                 
-                
                 ## Set Tqdm info
                 total_loss = total_loss + loss.item()
-                pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1)),
+                pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1))
+                
+                self.optimizer.zero_grad()
             pbar.close()
             
             ################################

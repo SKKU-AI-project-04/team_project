@@ -97,10 +97,11 @@ class DPR(nn.Module):
                 
                 self.optimizer.step()
                 
-                
                 ## Set Tqdm info
                 total_loss = total_loss + loss.item()
-                pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1)),
+                pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1))
+                
+                self.optimizer.zero_grad()
             pbar.close()
             
             ################################
