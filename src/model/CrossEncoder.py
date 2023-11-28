@@ -9,6 +9,7 @@ from collections import defaultdict
 from tqdm import tqdm
 from utils.tool import get_scheduler
 import os
+import matplotlib.pyplot as plt
 # from dataset.dataloader import Data_collection
 
 class CrossEncoder(nn.Module):
@@ -59,6 +60,7 @@ class CrossEncoder(nn.Module):
         scheduler_type = self.model_config['scheduler_type']
         flag_in_batch = self.model_config['in_batch']
         early_stop = self.model_config['early_stop']
+        desc = self.model_config['desc']
         # print("flag_in_batch",flag_in_batch)
         
         self.scheduler = get_scheduler(self.optimizer, scheduler=scheduler_type, warmup_steps=len(train_samples), t_total=int(len(train_samples) * num_epoch))
@@ -66,21 +68,25 @@ class CrossEncoder(nn.Module):
         best_scores = 0
         
         Stagnation = 0
+        train_loss_list = []
+        # valid_loss_list = []
         for epoch in range(1, num_epoch+1):
-            if epoch != 1:
-                train_samples = self.Data.make_train_samples_qids(self.Data.train_num)
+            # if epoch != 1:
+            train_samples = self.Data.make_train_samples_qids(self.Data.train_num)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########
             ################################
             ## Load train data
-            train_dataloader = DataLoader(train_samples[:100], batch_size = tarin_batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=flag_in_batch))
+            train_dataloader = DataLoader(train_samples, batch_size = tarin_batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=flag_in_batch))
             ## 
             self.to(self.device)
             
             total_loss = 0
             pbar = tqdm(train_dataloader, desc=f"Epoch {epoch+self.trained_epoch} Iteration", dynamic_ncols=True)
             for idx, (features, labels) in enumerate(pbar):
+                # if idx>10:
+                #     break
                 # print(features, '\n',labels)
                 ## output = model predict
                 model_predictions = self.model(**features, return_dict=True)
@@ -99,11 +105,24 @@ class CrossEncoder(nn.Module):
                 
                 ## Set Tqdm info
                 total_loss = total_loss + loss.item()
+                train_loss_list.append(loss.item())
                 pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1))
                 
                 self.optimizer.zero_grad()
                 self.scheduler.step()    
             pbar.close()
+            
+            ## 그래프 생성
+            steps = list(range(1, len(train_loss_list) + 1))
+            plt.plot(steps, train_loss_list, marker='o', linestyle='-')
+            ## 그래프에 제목과 레이블 추가
+            plt.title(f'Loss per Step/{epoch}_epoch')
+            plt.xlabel('Step')
+            plt.ylabel('Loss')
+
+            ## 그래프를 png 파일로 저장
+            plt.savefig(f'{self.__class__.__name__}_{desc}_loss_plot.png')
+
             
             ################################
             ######## VALID MODEL ###########
@@ -116,6 +135,8 @@ class CrossEncoder(nn.Module):
             total_recall3 = 0
             total_mrr3 = 0
             for idx, (features, labels) in enumerate(pbar_valid):
+                # if idx>10:
+                #     break
                 with torch.no_grad():
                     # print(features)
                     model_predictions = self.model(**features, return_dict=True)
@@ -149,11 +170,11 @@ class CrossEncoder(nn.Module):
             if best_scores < cur_score:
                 best_scores = cur_score
                 print(">> BEST MODEL")
-                self.model_save(epoch + self.trained_epoch)
+                self.model_save(epoch + self.trained_epoch, desc)
                 Stagnation = 0
             else:
-                print(">> Not BEST MODEL.. Stagnation:",Stagnation)
                 Stagnation +=1
+                print(">> Not BEST MODEL.. Stagnation:",Stagnation)
                 if Stagnation >= early_stop:
                     print(">> early_stop!! end train:",Stagnation)
                     break
@@ -273,19 +294,19 @@ class CrossEncoder(nn.Module):
     
     
     
-    def model_save(self, epoch):
+    def model_save(self, epoch, desc):
         print("model save")
         dir_path = os.path.dirname(os.path.abspath(__file__))
-        checkpoint_path = os.path.join(dir_path,"checkpoints", f'{epoch}_{self.__class__.__name__}_best_model.p')
+        checkpoint_path = os.path.join(dir_path,"checkpoints", f'{epoch}_{self.__class__.__name__}_{desc}_best_model.p')
         self.to('cuda')
         torch.save(self.state_dict(), checkpoint_path)
         self.to(self.device)
         
-    def model_load(self, epoch):
+    def model_load(self, epoch, desc):
         print("model load")
         self.trained_epoch = epoch
         dir_path = os.path.dirname(os.path.abspath(__file__))
-        checkpoint_path = os.path.join(dir_path,"checkpoints", f'{epoch}_{self.__class__.__name__}_best_model.p')
+        checkpoint_path = os.path.join(dir_path,"checkpoints", f'{epoch}_{self.__class__.__name__}_{desc}_best_model.p')
         self.load_state_dict(torch.load(checkpoint_path, map_location='cpu'))
         self.to(self.device)
     

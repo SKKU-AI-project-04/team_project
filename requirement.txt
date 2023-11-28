@@ -2,3 +2,5 @@ torch
 transformers
 sentence-transformers
 tqdm
+rank_bm25
+matplotlib

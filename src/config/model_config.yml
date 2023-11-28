@@ -10,12 +10,13 @@ bert_model_name: monologg/kobigbird-bert-base
 max_grad_norm: 1
 reg: 0.01
 lr: 2e-05
-num_epoch: 10
+num_epoch: 20
 train_batch_size: 3
 valid_batch_size: 3
-in_batch: False
+in_batch: True
 scheduler_type: warmuplinear
 early_stop: 3
+desc: in_batch_training
 ---
 # DPR
 model_name: DPR
@@ -23,9 +24,10 @@ bert_model_name: monologg/kobigbird-bert-base
 max_grad_norm: 1
 reg: 0.01
 lr: 2e-05
-num_epoch: 10
+num_epoch: 20
 train_batch_size: 2
 valid_batch_size: 3
 in_batch: False
 scheduler_type: warmuplinear
 early_stop: 3
+desc: in_batch_training
