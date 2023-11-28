@@ -1,16 +1,16 @@
 first_model: BM25
 second_model: CrossEncoder
 ## for making DATASET
-train_neg_num: 4
+train_neg_num: 1
 test_neg_num: 4
 valid_neg_num: 8
 
 # train
-in-batch-neg: True
-# total_docs_per_query: 2 
-train_batch_size: 3
-valid_batch_size: 3
+# in-batch-neg: True
+# # total_docs_per_query: 2 
+# train_batch_size: 3
+# valid_batch_size: 3
 
 
-# Test (Ranking)
-test_batch_size: 3
+# # Test (Ranking)
+# test_batch_size: 3
