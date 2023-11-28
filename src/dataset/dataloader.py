@@ -8,6 +8,9 @@ import pickle
 
 class Data_collection():
     def __init__(self, data_path, config):
+        seed = 42
+        random.seed(seed)
+        
         print("[Data Class init]")
         self.data_path = data_path
         self.cid2content = defaultdict()
@@ -19,6 +22,7 @@ class Data_collection():
         self.valid_qids = None
         self.pickle_neg = None
         self.num = config['test_neg_num'] 
+        self.train_num = config['train_neg_num'] 
         self.valid_num = config['valid_neg_num']
         
         
@@ -42,7 +46,7 @@ class Data_collection():
                 cid = cid.split("||")
                 self.qid2cids[qid] = cid
         
-        if os.path.isfile(os.path.join(data_path,"test_qid.pkl")):
+        if os.path.isfile(os.path.join(data_path,"train_qid.pkl")):
             with open(os.path.join(data_path, 'train_qid.pkl'), 'rb') as pf:
                 self.train_qids = pickle.load(pf)
             with open(os.path.join(data_path, 'test_qid.pkl'), 'rb') as pf:
@@ -54,7 +58,7 @@ class Data_collection():
             # print("true")
             self.qids = set([qid for qid in self.qid2question.keys()])
             
-            a, b = int(0.8*len(self.qids)), int(0.1*len(self.qids))
+            a, b = int(0.7*len(self.qids)), int(0.1*len(self.qids))
             qid_list = list(self.qids)
             
             random.shuffle(qid_list)
@@ -77,15 +81,15 @@ class Data_collection():
         print("> valid_qids",len(self.valid_qids))
         print("> test_qids", len(self.test_qids))
         
-        self.load_qids(self.num, valid_num = 50)
+        self.make_samples_qids(self.num, valid_num = 50)
         
         
-    def load_qids(self, num=4, valid_num = 8):
+    def make_samples_qids(self, num=4, valid_num = 8):
         train_samples = []
         valid_samples = []
         test_samples = []
         
-        if os.path.isfile(os.path.join(self.data_path,"test_samples.pkl")):
+        if os.path.isfile(os.path.join(self.data_path,"train_samples.pkl")):
             with open(os.path.join(self.data_path, 'train_samples.pkl'), 'rb') as pf:
                 train_samples = pickle.load(pf)
             with open(os.path.join(self.data_path, 'test_samples.pkl'), 'rb') as pf:
@@ -130,9 +134,9 @@ class Data_collection():
             # random_negs = cid_keys - set(self.qid2cids[qid])
             # random_negs = random.sample(list(random_negs), num)
             Q = self.qid2question[qid]
-            ans = self.qid2cids[qid]
+            ans_cids = self.qid2cids[qid]
             
-            test_samples.append([Q, ans])
+            test_samples.append([Q, ans_cids])
             
         
         
@@ -148,6 +152,33 @@ class Data_collection():
         self.test_samples = test_samples
         
         return train_samples, valid_samples, test_samples
+    
+    def make_train_samples_qids(self, num=4):
+        train_samples = []
+        
+        cid_keys = self.cid2content.keys()
+        
+        for qid in tqdm(self.train_qids, desc="Making train_samples"):
+            # random_negs = cid_keys - set(self.qid2cids[qid])
+            # random_negs = cid_keys
+            random_negs = random.sample(list(cid_keys), num+3)
+            random_negs = list(set(random_negs) - set(self.qid2cids[qid]))
+            pos = self.qid2cids[qid]
+            Q = self.qid2question[qid]
+            pos_D = [self.cid2content[p] for p in pos]
+            neg_D = [self.cid2content[n] for n in random_negs]
+            labels = [1]*len(pos_D) + [0]*len(neg_D)
+            
+            train_samples.append([Q, (pos_D+neg_D)[:num], labels[:num]])
+        
+        with open(os.path.join(self.data_path, 'train_samples.pkl'), 'wb') as pf:
+            pickle.dump(train_samples, pf)
+            
+        self.train_samples = train_samples
+
+        return train_samples
+    
+    
     def options_batching_collate(self, batch_size=4):
         
         pass
