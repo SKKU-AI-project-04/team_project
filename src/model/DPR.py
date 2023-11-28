@@ -7,6 +7,7 @@ from transformers import BertModel , AutoTokenizer, AutoModel, AutoConfig, AutoM
 from collections import defaultdict
 
 from tqdm import tqdm
+from utils.tool import get_scheduler
 
 import os
 
@@ -56,18 +57,27 @@ class DPR(nn.Module):
         print(">> Train Model Start")
         print("model_config:")
         num_epoch = self.model_config['num_epoch'] 
-        batch_size = self.model_config['train_batch_size']
+        tarin_batch_size = self.model_config['train_batch_size']
         valid_batch_size = self.model_config['train_batch_size']
+        scheduler_type = self.model_config['scheduler_type']
+        flag_in_batch = self.model_config['in_batch']
+        early_stop = self.model_config['early_stop']
+        self.scheduler = get_scheduler(self.optimizer, scheduler=scheduler_type, warmup_steps=len(train_samples), t_total=int(len(train_samples) * num_epoch))
+        
         best_scores = 0
         
+        Stagnation = 0
         for epoch in range(1, num_epoch+1):
+            if epoch != 1:
+                train_samples = self.Data.make_train_samples_qids(self.Data.train_num)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########
             ################################
             
             ## Load train data
-            train_dataloader = DataLoader(train_samples, batch_size = batch_size, shuffle=True, collate_fn = self.collate_fn)
+            train_dataloader = DataLoader(train_samples, batch_size = tarin_batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=flag_in_batch))
+
             ## 
             self.to(self.device)
             
@@ -102,6 +112,7 @@ class DPR(nn.Module):
                 pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1))
                 
                 self.optimizer.zero_grad()
+                self.scheduler.step()    
             pbar.close()
             
             ################################
@@ -156,9 +167,18 @@ class DPR(nn.Module):
                         
             pbar_valid.close()
             
-            if best_scores < total_mrr3/(idx+1):
+            cur_score = total_mrr3/(idx+1)
+            if best_scores < cur_score:
+                best_scores = cur_score
                 print(">> BEST MODEL")
                 self.model_save(epoch + self.trained_epoch)
+                Stagnation = 0
+            else:
+                print(">> Not BEST MODEL.. Stagnation:",Stagnation)
+                Stagnation +=1
+                if Stagnation >= early_stop:
+                    print(">> early_stop!! end train:",Stagnation)
+                    break
             
     
     

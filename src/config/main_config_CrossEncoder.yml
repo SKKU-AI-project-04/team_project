@@ -1,6 +1,7 @@
 first_model: BM25
 second_model: CrossEncoder
 ## for making DATASET
+train_neg_num: 4
 test_neg_num: 4
 valid_neg_num: 8
 

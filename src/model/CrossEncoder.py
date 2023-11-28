@@ -21,10 +21,10 @@ class CrossEncoder(nn.Module):
         self.model_config = model_config
         self.bert_model_name = model_config['bert_model_name']
         
-        self.config = AutoConfig.from_pretrained( self.bert_model_name)
+        self.config = AutoConfig.from_pretrained(self.bert_model_name)
         self.config.num_labels = 1
 
-        self.model = AutoModelForSequenceClassification.from_pretrained( self.bert_model_name, config=self.config)
+        self.model = AutoModelForSequenceClassification.from_pretrained(self.bert_model_name, config=self.config)
         self.tokenizer = AutoTokenizer.from_pretrained(self.bert_model_name)
         
         self.activation = nn.Identity()
@@ -54,22 +54,27 @@ class CrossEncoder(nn.Module):
     def train_model(self, train_samples, valid_samples = None):
         print(">> Train Model Start")
         num_epoch = self.model_config['num_epoch'] 
-        batch_size = self.model_config['train_batch_size']
+        tarin_batch_size = self.model_config['train_batch_size']
         valid_batch_size = self.model_config['train_batch_size']
+        scheduler_type = self.model_config['scheduler_type']
+        flag_in_batch = self.model_config['in_batch']
+        early_stop = self.model_config['early_stop']
+        # print("flag_in_batch",flag_in_batch)
         
-        # warmup_steps = len(train_samples)
-        # num_train_steps = int(len(train_dataloader) * num_epoch)
-        # self.scheduler = get_scheduler(self.optimizer, scheduler=self.scheduler_type, warmup_steps=warmup_steps, t_total=num_train_steps)
+        self.scheduler = get_scheduler(self.optimizer, scheduler=scheduler_type, warmup_steps=len(train_samples), t_total=int(len(train_samples) * num_epoch))
         
         best_scores = 0
+        
+        Stagnation = 0
         for epoch in range(1, num_epoch+1):
-            train_samples, _, _ = self.Data.load_qids(self.Data.num, valid_num = 50)
+            if epoch != 1:
+                train_samples = self.Data.make_train_samples_qids(self.Data.train_num)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########
             ################################
             ## Load train data
-            train_dataloader = DataLoader(train_samples, batch_size = batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=False))
+            train_dataloader = DataLoader(train_samples[:100], batch_size = tarin_batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=flag_in_batch))
             ## 
             self.to(self.device)
             
@@ -97,6 +102,7 @@ class CrossEncoder(nn.Module):
                 pbar.set_postfix(loss=loss.item(), avg_loss = total_loss/(idx+1))
                 
                 self.optimizer.zero_grad()
+                self.scheduler.step()    
             pbar.close()
             
             ################################
@@ -118,11 +124,6 @@ class CrossEncoder(nn.Module):
                     logits = self.activation_train(model_predictions.logits)
                     logits = logits.view(-1)
                     
-                    ## calculate loss
-                    # logits
-                    # labels
-                    # print("logit : ", logits)
-                    # print("lable : ", labels)
                     sorted_pairs = sorted(zip(logits.tolist(), labels.tolist()), reverse=True)
                     
                     
@@ -141,15 +142,21 @@ class CrossEncoder(nn.Module):
                                 total_recall3 += recall_score
                     ## Set Tqdm info
                     pbar_valid.set_postfix(mrr3=mrr_score, total_mrr3 = total_mrr3/(idx+1), recall3=recall_score, total_recall3 = total_recall3/(idx+1))
-                    
-                        
+            
             pbar_valid.close()
             
-            if best_scores < total_mrr3/(idx+1):
+            cur_score = total_mrr3/(idx+1)
+            if best_scores < cur_score:
+                best_scores = cur_score
                 print(">> BEST MODEL")
                 self.model_save(epoch + self.trained_epoch)
-            
-                    
+                Stagnation = 0
+            else:
+                print(">> Not BEST MODEL.. Stagnation:",Stagnation)
+                Stagnation +=1
+                if Stagnation >= early_stop:
+                    print(">> early_stop!! end train:",Stagnation)
+                    break
             # break
             
             
@@ -241,6 +248,7 @@ class CrossEncoder(nn.Module):
         batch_labels = torch.tensor([float(label) for label in batch_labels], dtype=torch.float32)
         encoded_input = encoded_input.to(self.device)
         batch_labels = batch_labels.to(self.device)
+        # print("batch_labels:",batch_labels)
         return encoded_input, batch_labels
     
     
