@@ -122,7 +122,7 @@ class DPR(nn.Module):
             
             ## 그래프 생성
             steps = list(range(1, len(train_loss_list) + 1))
-            plt.plot(steps, train_loss_list, marker='o', linestyle='-')
+            plt.plot(steps, train_loss_list, linestyle='-')
             ## 그래프에 제목과 레이블 추가
             plt.title(f'Loss per Step/{epoch}_epoch')
             plt.xlabel('Step')
