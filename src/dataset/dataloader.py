@@ -175,14 +175,17 @@ class Data_collection():
                 labels = [1]*len(pos_D) + [0]*len(neg_D)
                 
                 train_samples.append([Q, (pos_D+neg_D)[:num], labels[:num]])
+                
             elif train_neg_cand_type == 'bm25':
-                random_negs = random.sample(self.pickle_neg_cand[pid], num+3)
+                random_negs = random.sample(self.pickle_neg_cand[qid], num+3)
                 random_negs = list(set(random_negs) - set(self.qid2cids[qid]))
                 pos = self.qid2cids[qid]
                 Q = self.qid2question[qid]
                 pos_D = [self.cid2content[p] for p in pos]
                 neg_D = [self.cid2content[n] for n in random_negs]
                 labels = [1]*len(pos_D) + [0]*len(neg_D)
+                
+                train_samples.append([Q, (pos_D+neg_D)[:num], labels[:num]])
         
         with open(os.path.join(self.data_path, 'train_samples.pkl'), 'wb') as pf:
             pickle.dump(train_samples, pf)
@@ -192,41 +195,4 @@ class Data_collection():
         return train_samples
     
     
-    def options_batching_collate(self, batch_size=4):
-        
-        pass
     
-    
-    
-    
-    # # @property
-    # def random_neg(self, num=4):
-    #     '''
-    #         return neg samples
-    #         input : 
-    #     '''
-    #     random_negs = self.cid2content.keys() - set(self.qid2cids[qid])
-    #     random_negs = random.sample(list(random_negs), num)
-    #     pos = self.qid2cids[qid]
-        
-    #     return (pos+random_negs)[:num]
-    
-    # @property
-    # def pickle_neg(self, qid, num=8):
-    #     '''
-    #         return neg samples
-    #         input : 
-    #     '''
-    #     assert self.pickle_neg is None, '[ERR] pickle neg file is not loaded'
-        
-    #     random_negs = self.cid2content.keys() - set(self.qid2cids[qid])
-    #     random_negs = random.sample(list(random_negs), num)
-    #     pos = self.qid2cids[qid]
-          
-    #     return (pos+random_negs)[:num]
-    
-    
-    # @property
-    # def inbatch_neg(self, qids):
-        
-    #     pass
