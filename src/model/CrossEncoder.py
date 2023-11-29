@@ -73,12 +73,14 @@ class CrossEncoder(nn.Module):
         # valid_loss_list = []
         for epoch in range(1, num_epoch+1):
             # if epoch != 1:
+            print(self.Data.train_num, self.train_neg_cand_type)
             train_samples = self.Data.make_train_samples_qids(self.Data.train_num, self.train_neg_cand_type)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########
             ################################
             ## Load train data
+            # print(len(train_samples))
             train_dataloader = DataLoader(train_samples, batch_size = tarin_batch_size, shuffle=True, collate_fn=lambda batch: self.collate_fn(batch, in_batch=flag_in_batch))
             ## 
             self.to(self.device)
