@@ -21,7 +21,7 @@ class DPR(nn.Module):
         super().__init__()
         self.trained_epoch = 0
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        
+        self.train_neg_cand = model_config['train_neg_cand']
         self.model_config = model_config
         self.bert_model_name = model_config['bert_model_name']
         

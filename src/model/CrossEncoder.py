@@ -19,6 +19,7 @@ class CrossEncoder(nn.Module):
         self.trained_epoch = 0
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.Data = datasets
+        self.train_neg_cand_type = model_config['train_neg_cand_type']
         self.model_config = model_config
         self.bert_model_name = model_config['bert_model_name']
         
@@ -72,7 +73,7 @@ class CrossEncoder(nn.Module):
         # valid_loss_list = []
         for epoch in range(1, num_epoch+1):
             # if epoch != 1:
-            train_samples = self.Data.make_train_samples_qids(self.Data.train_num)
+            train_samples = self.Data.make_train_samples_qids(self.Data.train_num, self.train_neg_cand_type)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########

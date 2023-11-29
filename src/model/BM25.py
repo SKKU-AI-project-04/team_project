@@ -10,8 +10,8 @@ class BM25():
     def __init__(self, datasets, model_config):
         super().__init__()
         self.cid2content = datasets.cid2content
-        self.k = 1.2
-        self.b = 0.75
+        self.k = model_config['k']
+        self.b = model_config['b']
         self.mecab = Mecab("/usr/local/lib/mecab/dic/mecab-ko-dic")        
 
         tokenized_corpus = [self.mecab_tokenizer(doc) for doc in tqdm(datasets.cid2content.values())]
