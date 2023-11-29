@@ -11,7 +11,8 @@ from utils.tool import get_scheduler
 
 import os
 import matplotlib.pyplot as plt
-
+from collections import defaultdict
+import pickle
 # from dataset.dataloader import Dataset
 
 
@@ -21,7 +22,7 @@ class DPR(nn.Module):
         super().__init__()
         self.trained_epoch = 0
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.train_neg_cand = model_config['train_neg_cand']
+        self.train_neg_cand_type = model_config['train_neg_cand_type']
         self.model_config = model_config
         self.bert_model_name = model_config['bert_model_name']
         
@@ -48,10 +49,9 @@ class DPR(nn.Module):
         
         self.to(self.device)
         
+        self.cid2vec = defaultdict()
         
-        
-    def pre_calculate_vec(self):
-        pass
+    
     
     
     def train_model(self, train_samples, valid_samples = None):
@@ -313,10 +313,72 @@ class DPR(nn.Module):
         return encoded_Q_input, encoded_C_input
     
     
+    def pre_calculate_vec(self, DATA_class):
+        cids = list(DATA_class.cid2content.keys())
+        contents = list(DATA_class.cid2content.values())
+        # print(cids[:10])
+        # print(contents[:10])
+        content_dataloader = DataLoader(contents, batch_size = 4, shuffle=False)
+        vec_list = []
+        # i =0
+        for batch_content in tqdm(content_dataloader):
+            with torch.no_grad():
+                C_features = self.tokenizer(batch_content, padding=True, truncation='longest_first', return_tensors="pt", max_length=512)
+                C_features = C_features.to(self.device)
+                C_model_ouput = (self.model(**C_features, return_dict=True).pooler_output)
+                vec = [output for output in C_model_ouput]
+            vec_list.extend(vec)
+            # self.tokenizer(batch_question, padding=True, truncation='longest_first', return_tensors="pt", max_length=512)
+            # i+=1
+            # if i>3:
+            #     break
+        # print(vec_list)
+        for cid, vec in zip(cids, vec_list):
+            self.cid2vec[cid] = vec
+            
+        with open("tmp.pkl", "wb") as f:
+            pickle.dump(self.cid2vec, f)
     
     
+    def pre_calculate_vec_from_pkl(self, DATA_class):
+            
+        with open("tmp.pkl", "rb") as f:
+            self.cid2vec = pickle.load(f)
     
-    
+    def FAST_Ranking(self, q_id, candidate_collection_ids, Data_class, topn= -1):
+        
+        # Make samples
+        Q_C_pairs = []
+        questions = q_id[0]
+        with torch.no_grad():
+            Q_features = self.tokenizer(questions, padding=True, truncation='longest_first', return_tensors="pt", max_length=512)
+            Q_features = Q_features.to(self.device)
+            Q_vec = self.model(**Q_features, return_dict=True).pooler_output
+        
+        for c_id in candidate_collection_ids:
+            
+            vec = self.cid2vec[c_id]
+            Q_C_pairs.append([Q_vec, vec])
+        
+        ## Predict Score            
+        scores = [torch.matmul(pair[0], pair[1]).item() for pair in Q_C_pairs]
+        # print(scores)
+        # print(len(scores))
+        # scores = self.predict(Q_C_pairs)
+
+        # 함께 정렬
+        sorted_lists = sorted(zip(scores, candidate_collection_ids), key=lambda x: x[0], reverse=True)
+        # 정렬된 결과를 다시 풀어냄        
+        sorted_score, sorted_candidate = zip(*sorted_lists)
+        # print("sorted_score[:100]", len(sorted_score[:100]), sorted_score[:100])
+
+        # print(sorted_score[:10])  # [4, 3, 2, 1]
+        # print(sorted_candidate[:10])
+        
+        if topn > 0 :
+            return sorted_candidate[:topn], sorted_score[:topn]
+        else:
+            return sorted_candidate, sorted_score
         
         
         
