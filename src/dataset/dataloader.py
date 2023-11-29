@@ -20,7 +20,7 @@ class Data_collection():
         self.train_qids = None
         self.test_qids = None
         self.valid_qids = None
-        self.pickle_neg = None
+        self.pickle_neg_cand = None
         self.num = config['test_neg_num'] 
         self.train_num = config['train_neg_num'] 
         self.valid_num = config['valid_neg_num']
@@ -45,6 +45,10 @@ class Data_collection():
                 qid, cid = row
                 cid = cid.split("||")
                 self.qid2cids[qid] = cid
+                
+        if os.path.isfile(os.path.join(data_path,"neg_bm25_cand.pkl")):
+            with open(os.path.join(data_path,"neg_bm25_cand.pkl"), 'rb') as pf:
+                self.pickle_neg_cand = pickle.load(pf)
         
         if os.path.isfile(os.path.join(data_path,"train_qid.pkl")):
             with open(os.path.join(data_path, 'train_qid.pkl'), 'rb') as pf:
@@ -153,7 +157,7 @@ class Data_collection():
         
         return train_samples, valid_samples, test_samples
     
-    def make_train_samples_qids(self, num=4):
+    def make_train_samples_qids(self, num=4, train_neg_cand_type="random"):
         train_samples = []
         
         cid_keys = self.cid2content.keys()
@@ -161,15 +165,24 @@ class Data_collection():
         for qid in tqdm(self.train_qids, desc="Making train_samples"):
             # random_negs = cid_keys - set(self.qid2cids[qid])
             # random_negs = cid_keys
-            random_negs = random.sample(list(cid_keys), num+3)
-            random_negs = list(set(random_negs) - set(self.qid2cids[qid]))
-            pos = self.qid2cids[qid]
-            Q = self.qid2question[qid]
-            pos_D = [self.cid2content[p] for p in pos]
-            neg_D = [self.cid2content[n] for n in random_negs]
-            labels = [1]*len(pos_D) + [0]*len(neg_D)
-            
-            train_samples.append([Q, (pos_D+neg_D)[:num], labels[:num]])
+            if train_neg_cand_type == 'random':
+                random_negs = random.sample(list(cid_keys), num+3)
+                random_negs = list(set(random_negs) - set(self.qid2cids[qid]))
+                pos = self.qid2cids[qid]
+                Q = self.qid2question[qid]
+                pos_D = [self.cid2content[p] for p in pos]
+                neg_D = [self.cid2content[n] for n in random_negs]
+                labels = [1]*len(pos_D) + [0]*len(neg_D)
+                
+                train_samples.append([Q, (pos_D+neg_D)[:num], labels[:num]])
+            elif train_neg_cand_type == 'bm25':
+                random_negs = random.sample(self.pickle_neg_cand[pid], num+3)
+                random_negs = list(set(random_negs) - set(self.qid2cids[qid]))
+                pos = self.qid2cids[qid]
+                Q = self.qid2question[qid]
+                pos_D = [self.cid2content[p] for p in pos]
+                neg_D = [self.cid2content[n] for n in random_negs]
+                labels = [1]*len(pos_D) + [0]*len(neg_D)
         
         with open(os.path.join(self.data_path, 'train_samples.pkl'), 'wb') as pf:
             pickle.dump(train_samples, pf)

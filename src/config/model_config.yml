@@ -16,7 +16,8 @@ valid_batch_size: 3
 in_batch: True
 scheduler_type: warmuplinear
 early_stop: 3
-desc: in_batch_training
+desc: in_batch_training     #in_batch_training, non_in_batch_training
+train_neg_cand_type: bm25  #random, bm25, hard
 ---
 # DPR
 model_name: DPR
@@ -31,3 +32,4 @@ in_batch: False
 scheduler_type: warmuplinear
 early_stop: 3
 desc: in_batch_training
+train_neg_cand_type: bm25  #random, bm25, hard

@@ -19,6 +19,7 @@ class CrossEncoder(nn.Module):
         self.trained_epoch = 0
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.Data = datasets
+        self.train_neg_cand_type = model_config['train_neg_cand_type']
         self.model_config = model_config
         self.bert_model_name = model_config['bert_model_name']
         
@@ -72,7 +73,7 @@ class CrossEncoder(nn.Module):
         # valid_loss_list = []
         for epoch in range(1, num_epoch+1):
             # if epoch != 1:
-            train_samples = self.Data.make_train_samples_qids(self.Data.train_num)
+            train_samples = self.Data.make_train_samples_qids(self.Data.train_num, self.train_neg_cand_type)
             print(f"epoch-{epoch+self.trained_epoch}")
             ################################
             ######## TRAIN MODEL ###########
@@ -112,9 +113,10 @@ class CrossEncoder(nn.Module):
                 self.scheduler.step()    
             pbar.close()
             
+            ################################
             ## 그래프 생성
             steps = list(range(1, len(train_loss_list) + 1))
-            plt.plot(steps, train_loss_list, marker='o', linestyle='-')
+            plt.plot(steps, train_loss_list, linestyle='-')
             ## 그래프에 제목과 레이블 추가
             plt.title(f'Loss per Step/{epoch}_epoch')
             plt.xlabel('Step')
@@ -122,7 +124,7 @@ class CrossEncoder(nn.Module):
 
             ## 그래프를 png 파일로 저장
             plt.savefig(f'{self.__class__.__name__}_{desc}_loss_plot.png')
-
+            ################################
             
             ################################
             ######## VALID MODEL ###########

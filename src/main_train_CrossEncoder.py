@@ -8,8 +8,9 @@ import yaml
 
 with open('config/main_config_CrossEncoder.yml') as config_file:
     config_data =list(yaml.safe_load_all(config_file))[0]
-with open('config/model_config.yml') as config_file:
-    model_config_data = list(yaml.safe_load_all(config_file))
+    model_config_data = list(yaml.safe_load_all(config_file))[1:]
+# with open('config/model_config.yml') as config_file:
+#     model_config_data = list(yaml.safe_load_all(config_file))
     
 # print(type(model_config_data))
 # print(type(config_data))
