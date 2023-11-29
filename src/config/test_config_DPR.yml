@@ -1,0 +1,44 @@
+########## This is for model config section ##########
+first_model: BM25
+second_model: DPR
+## for making DATASET
+train_neg_num: 1                    # [DATA LOAD] train에서 neg+pos의 개수
+test_neg_num: 4                     # [DATA LOAD] 안씀
+valid_neg_num: 8                    # [DATA LOAD] valid에서 neg+pos의 개수
+---
+########## This is for model config section ##########
+# BM25
+model_name: BM25
+bert_model_name: monologg/kobigbird-bert-base
+k: 1.2
+b: 0.75
+---
+# CrossEncoder
+model_name: CrossEncoder
+bert_model_name: monologg/kobigbird-bert-base
+max_grad_norm: 1
+reg: 0.01
+lr: 2e-05
+num_epoch: 20 
+train_batch_size: 3                   # [TRAIN] 학습시 배치사이즈
+valid_batch_size: 3                   # [VALID] 학습시 배치사이즈
+in_batch: True                        # [TRAIN] 학습시 neg 넣어주는 방식 [True, False]
+scheduler_type: warmuplinear          # [TRAIN] 스켸쥴러 [constantlr, warmupconstant, warmupcosine, warmupcosine, warmupcosinewithhardrestarts]
+early_stop: 3                         # [TRAIN] Early stop 
+desc: in_batch_training               # [TRAIN] 체크포인트 이름에 설명 저장 ex)in_batch_training, non_in_batch_training
+train_neg_cand_type: bm25             # [TRAIN] neg_candidate 종류 [random, bm25, hard]
+---
+# DPR
+model_name: DPR
+bert_model_name: monologg/kobigbird-bert-base
+max_grad_norm: 1
+reg: 0.01
+lr: 2e-05
+num_epoch: 20
+train_batch_size: 2
+valid_batch_size: 3
+in_batch: False
+scheduler_type: warmuplinear
+early_stop: 3
+desc: in_batch_training
+train_neg_cand_type: bm25  #random, bm25, hard
